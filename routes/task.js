@@ -14,7 +14,7 @@ taskRouter
                 return;
             }
 
-            console.log(tasks);
+            // console.log(tasks);
             res.json(tasks);
         });
     })
@@ -24,22 +24,25 @@ taskRouter
         /* Get all task & find free id for new task */
         let indexOfTask = 0;
 
+        // New task
+        var task = new Task(req.body);
+        task.id = indexOfTask;
+
         Task.find((err, tasks) => {
             if (err) {
                 res.status(500).send(err);
                 return;
             }
 
-            if (tasks) {
+            if (tasks.length > 0) {
                 indexOfTask = tasks[0].id;
             }
+
             tasks.forEach(function (item) {
                 if (item.id > indexOfTask)
                     indexOfTask = item.id;
             }, this);
 
-            /* Created new task */
-            var task = new Task(req.body);
             task.id = indexOfTask + 1;
 
             task.save();
@@ -62,7 +65,6 @@ taskRouter
                 return;
             }
 
-            console.log(task);
             res.json(task);
         });
     })
@@ -122,6 +124,40 @@ taskRouter
                     message: 'Task with id ' + taskId + ' was not found.'
                 });
             }
+        });
+    });
+
+
+taskRouter
+    .route('/schedule/:year/:month/:date')
+    .get((req, res) => {
+        console.log('GET /schedule/:year/:month/:date');
+
+        var date = Number(req.params.date);
+        var month = Number(req.params.month) - 1;
+        var year = Number(req.params.year);
+
+        console.log(date + ' ' + month + ' ' + year);
+
+        Task.find((err, tasks) => {
+            if (err) {
+                res.status(500).send(err);
+                return;
+            }
+
+            let actualTasks = tasks.filter((task) => {
+                let result = false;
+
+                var currDate = new Date(task.start);
+
+                if (currDate.getDate() == date && currDate.getMonth() == month &&
+                    currDate.getFullYear() == year)
+                    result = true;
+
+                return result;
+            });
+
+            res.json(actualTasks);
         });
     });
 
